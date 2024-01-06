@@ -7,7 +7,7 @@ name :{
     type: String
 }, status :{
     type: String,
-    enum: ['new', 'In Progress', 'Completed']
+    enum: ['new', 'progress', 'completed']
 },
 // foreign key
 clientId: {

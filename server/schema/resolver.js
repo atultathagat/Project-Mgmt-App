@@ -9,12 +9,17 @@ const resolvers = {
         client: (_, args) => {
             return Client.findById(args.id)
         },
-        projects: () => {
-            return Project.find();
+         projects: async () => {
+            const projects = await Project.find();
+             const mappedProjects=  projects.map(async project => {
+                project.client =await Client.findById(project?.clientId);
+               return project;
+            })
+             return mappedProjects;
         },
-        project: (parent, args) => {
-            const project = Project.findById(args.id);
-            project.client = Client.findById(parent.clientId);
+        project: async (__,args) => {
+             const project = await Project.findById(args.id);
+            project.client =await Client.findById(project?.clientId);
             return project;
         }
     },
@@ -27,8 +32,10 @@ const resolvers = {
             })
             return client.save();
         },
-        deleteClient: (_, args) => {
-            return Client.findByIdAndUpdate(args.id)
+        deleteClient: async (_, args) => {
+            const projects = await Project.find({clientId: args.id});
+             projects.forEach(project => project.remove());
+            return Client.findByIdAndDelete(args.id)
         },
         addProject: (_, args) => {
             const project = new Project({
@@ -40,14 +47,15 @@ const resolvers = {
             return project.save();
         },
         deleteProject: (_, args) => {
-            return Project.findOneAndUpdate(args.id)
+            return Project.findByIdAndDelete(args.id)
         },
         updateProject: (_, args) => {
              return Project.findByIdAndUpdate(
                      { _id: args.input.id }, {
                     name: args.input.name,
                     description: args.input.description,
-                    status: args.input.status
+                    status: args.input.status,
+                    clientId: args.input.clientId
             }
             )
         }
